@@ -18,6 +18,13 @@ namespace LiteDBSamples
         public Form1()
         {
             this.InitializeComponent();
+
+            //StartUp();
+        }
+
+        private static void StartUp()
+        {
+            BsonMapper.Global.Entity<Customer>().Id(x => x.No);
         }
 
         private static string GetRawSamples()
@@ -167,7 +174,7 @@ namespace LiteDBSamples
         private void button6_Click(object sender, EventArgs e)
         {
             var id = Guid.NewGuid();
-
+            
             using (var db = new LiteDatabase(ConnectionString))
             {
                 var collection = db.GetCollection<Sample>();
@@ -203,6 +210,40 @@ namespace LiteDBSamples
                 // 給入 Query Method 當條件
                 var results2 = collection.Find(Query.EQ(nameof(Sample.Name), "Johnny Smith"));
             }
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            var id = Guid.NewGuid();
+            var ms = new MemoryStream();
+
+            using (var db = new LiteDatabase(ms))
+            {
+                var collection = db.GetCollection<Customer>();
+
+                var customer = new Customer
+                                   {
+                                       No = id,
+                                       Name = "Johnny Studio",
+                                       Phone = "+886912345678",
+                                       Address = "永和",
+                                       Birthday = DateTime.Now
+                                   };
+
+                collection.Insert(customer);
+
+                //// 額外指定 Id 值
+                //collection.Insert(customer.No, customer);
+
+                this.textBox1.Text = collection.FindById(id).Name;
+            }
+
+            ms.Close();
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
