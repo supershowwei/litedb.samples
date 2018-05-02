@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -15,11 +16,13 @@ namespace LiteDBSamples
     {
         private static readonly string ConnectionString = @"Filename=D:\test.db";
 
+        private readonly MemoryStream ms = new MemoryStream();
+
         public Form1()
         {
             this.InitializeComponent();
 
-            //StartUp();
+            // StartUp();
         }
 
         private static void StartUp()
@@ -174,7 +177,7 @@ namespace LiteDBSamples
         private void button6_Click(object sender, EventArgs e)
         {
             var id = Guid.NewGuid();
-            
+
             using (var db = new LiteDatabase(ConnectionString))
             {
                 var collection = db.GetCollection<Sample>();
@@ -233,8 +236,7 @@ namespace LiteDBSamples
                 collection.Insert(customer);
 
                 //// 額外指定 Id 值
-                //collection.Insert(customer.No, customer);
-
+                // collection.Insert(customer.No, customer);
                 this.textBox1.Text = collection.FindById(id).Name;
             }
 
@@ -243,7 +245,82 @@ namespace LiteDBSamples
 
         private void button9_Click(object sender, EventArgs e)
         {
+            var lines = File.ReadAllLines(@"D:\Labs\litedb.samples\sample.txt").Skip(1);
 
+            var samples = lines.Select(
+                x =>
+                    {
+                        var arr = x.Split('|');
+
+                        return new Sample
+                                   {
+                                       Id = Guid.Parse(arr[0]),
+                                       Name = arr[1],
+                                       Phone = arr[2],
+                                       Address = arr[3],
+                                       Birthday = DateTime.Parse(arr[4]),
+                                       Code = int.Parse(arr[5])
+                                   };
+                    });
+
+            // using (var db = new LiteDatabase(ConnectionString))
+            //using (var db = new LiteDatabase(@"D:\test_indexed.db"))
+            using (var db = new LiteDatabase(this.ms))
+            {
+                var collection = db.GetCollection<Sample>();
+
+                collection.Insert(samples);
+
+                collection.EnsureIndex(x => x.Name);
+            }
+        }
+
+        private void button10_Click(object sender, EventArgs e)
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            //using (var db = new LiteDatabase(ConnectionString))
+            using (var db = new LiteDatabase(@"D:\test_indexed.db"))
+            //using (var db = new LiteDatabase(this.ms))
+            {
+                var collection = db.GetCollection<Sample>();
+
+                var sample = collection.Find(x => x.Name.Equals("Cheyenne Lancaster")).First();
+
+                this.textBox1.Text = sample.Name;
+            }
+
+            this.textBox1.Text = $"{stopwatch.ElapsedMilliseconds} ms";
+        }
+
+        private void button11_Click(object sender, EventArgs e)
+        {
+            var lines = File.ReadAllLines(@"D:\Labs\litedb.samples\sample.txt").Skip(1);
+
+            var samples = lines.Select(
+                x =>
+                    {
+                        var arr = x.Split('|');
+
+                        return new Sample
+                                   {
+                                       Id = Guid.Parse(arr[0]),
+                                       Name = arr[1],
+                                       Phone = arr[2],
+                                       Address = arr[3],
+                                       Birthday = DateTime.Parse(arr[4]),
+                                       Code = int.Parse(arr[5])
+                                   };
+                    });
+
+            var memoryStream = new MemoryStream();
+
+            using (var db = new LiteDatabase(memoryStream))
+            {
+                var collection = db.GetCollection<Sample>();
+
+                collection.Insert(samples);
+            }
         }
     }
 }
