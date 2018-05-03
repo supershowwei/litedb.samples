@@ -264,14 +264,19 @@ namespace LiteDBSamples
                     });
 
             // using (var db = new LiteDatabase(ConnectionString))
-            //using (var db = new LiteDatabase(@"D:\test_indexed.db"))
-            using (var db = new LiteDatabase(this.ms))
+            using (var db = new LiteDatabase(@"D:\test_indexed.db"))
+            //using (var db = new LiteDatabase(this.ms))
+            {
+                var collection = db.GetCollection<Sample>();
+
+                collection.EnsureIndex(x => x.Name);
+            }
+
+            using (var db = new LiteDatabase(@"D:\test_indexed.db"))
             {
                 var collection = db.GetCollection<Sample>();
 
                 collection.Insert(samples);
-
-                collection.EnsureIndex(x => x.Name);
             }
         }
 
