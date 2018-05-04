@@ -183,14 +183,14 @@ namespace LiteDBSamples
                 var collection = db.GetCollection<Sample>();
 
                 var doc = new Sample
-                              {
-                                  Id = id,
-                                  Name = "Hello World",
-                                  Phone = "+886912345678",
-                                  Address = "中和",
-                                  Birthday = new DateTime(2000, 1, 1),
-                                  Code = 12345
-                              };
+                {
+                    Id = id,
+                    Name = "Hello World",
+                    Phone = "+886912345678",
+                    Address = "中和",
+                    Birthday = new DateTime(2000, 1, 1),
+                    Code = 12345
+                };
 
                 // Insert Or Update 單筆資料
                 collection.Upsert(doc);
@@ -225,13 +225,13 @@ namespace LiteDBSamples
                 var collection = db.GetCollection<Customer>();
 
                 var customer = new Customer
-                                   {
-                                       No = id,
-                                       Name = "Johnny Studio",
-                                       Phone = "+886912345678",
-                                       Address = "永和",
-                                       Birthday = DateTime.Now
-                                   };
+                {
+                    No = id,
+                    Name = "Johnny Studio",
+                    Phone = "+886912345678",
+                    Address = "永和",
+                    Birthday = DateTime.Now
+                };
 
                 collection.Insert(customer);
 
@@ -253,14 +253,14 @@ namespace LiteDBSamples
                         var arr = x.Split('|');
 
                         return new Sample
-                                   {
-                                       Id = Guid.Parse(arr[0]),
-                                       Name = arr[1],
-                                       Phone = arr[2],
-                                       Address = arr[3],
-                                       Birthday = DateTime.Parse(arr[4]),
-                                       Code = int.Parse(arr[5])
-                                   };
+                        {
+                            Id = Guid.Parse(arr[0]),
+                            Name = arr[1],
+                            Phone = arr[2],
+                            Address = arr[3],
+                            Birthday = DateTime.Parse(arr[4]),
+                            Code = int.Parse(arr[5])
+                        };
                     });
 
             // using (var db = new LiteDatabase(ConnectionString))
@@ -270,6 +270,7 @@ namespace LiteDBSamples
                 var collection = db.GetCollection<Sample>();
 
                 collection.EnsureIndex(x => x.Name);
+                collection.EnsureIndex(x => x.Birthday);
             }
 
             using (var db = new LiteDatabase(@"D:\test_indexed.db"))
@@ -308,14 +309,14 @@ namespace LiteDBSamples
                         var arr = x.Split('|');
 
                         return new Sample
-                                   {
-                                       Id = Guid.Parse(arr[0]),
-                                       Name = arr[1],
-                                       Phone = arr[2],
-                                       Address = arr[3],
-                                       Birthday = DateTime.Parse(arr[4]),
-                                       Code = int.Parse(arr[5])
-                                   };
+                        {
+                            Id = Guid.Parse(arr[0]),
+                            Name = arr[1],
+                            Phone = arr[2],
+                            Address = arr[3],
+                            Birthday = DateTime.Parse(arr[4]),
+                            Code = int.Parse(arr[5])
+                        };
                     });
 
             var memoryStream = new MemoryStream();
@@ -325,6 +326,60 @@ namespace LiteDBSamples
                 var collection = db.GetCollection<Sample>();
 
                 collection.Insert(samples);
+            }
+        }
+
+        private void button12_Click(object sender, EventArgs e)
+        {
+            using (var db = new LiteDatabase(@"D:\test_indexed.db"))
+            {
+                var collection = db.GetCollection<Sample>();
+
+                //var firstBorn = collection.FindAll().OrderByDescending(x => x.Birthday).ThenBy(x => x.Id).First();
+
+                var firstBorn = collection.Find(Query.All(nameof(Sample.Birthday), Query.Descending), limit: 1).Single();
+
+                this.textBox1.Text = $"{firstBorn.Name}, {firstBorn.Birthday:yyyy-MM-dd}";
+            }
+        }
+
+        private void button13_Click(object sender, EventArgs e)
+        {
+            using (var db = new LiteDatabase(@"D:\test_indexed.db"))
+            {
+                var collection = db.GetCollection<Sample>();
+
+                //var firstBorn = collection.Find(x => x.Birthday < new DateTime(2000, 1, 1))
+                //    .OrderByDescending(x => x.Birthday)
+                //    .First();
+
+                var firstBorn = collection.Find(
+                        Query.And(
+                            Query.All(nameof(Sample.Birthday), Query.Descending),
+                            Query.LT(nameof(Sample.Birthday), new DateTime(2000, 1, 1))),
+                        limit: 1)
+                    .Single();
+
+                //var firstBorn = collection.Find(
+                //        Query.Where(nameof(Sample.Birthday), value => value.AsDateTime < new DateTime(2000, 1, 1), Query.Descending),
+                //        limit: 1)
+                //    .Single();
+
+                this.textBox1.Text = $"{firstBorn.Name}, {firstBorn.Birthday:yyyy-MM-dd}";
+            }
+        }
+
+        private void button14_Click(object sender, EventArgs e)
+        {
+            using (var db = new LiteDatabase(@"D:\test_indexed.db"))
+            {
+                var collection = db.GetCollection<Sample>();
+
+                //var count = collection.Count(x => x.Birthday < new DateTime(2000, 1, 1));
+
+                var count = collection.Count(Query.LT("Birthday", new DateTime(2000, 1, 1)));
+
+                this.textBox1.Text = count.ToString();
             }
         }
     }
