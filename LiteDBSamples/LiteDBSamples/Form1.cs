@@ -162,7 +162,7 @@ namespace LiteDBSamples
                 collection.Update(doc);
                 collection.Update(id, doc);
 
-                var docs = collection.Find(x => x.Birthday > new DateTime(2000, 1, 1));
+                var docs = collection.Find(x => x.Birthday > new DateTime(2000, 1, 1)).ToList();
 
                 foreach (var sample in docs)
                 {
